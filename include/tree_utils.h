@@ -57,7 +57,7 @@ int bstRead(FILE* file, TreeNode* bst1, TreeNode* bst2)
             else  // Two arguments are given: this is a parent-leaf tuple
             {
                 pNode = bstFindElemAddr(nKeyBuf[0]);
-                bstInsertEdge();
+                // bstInsertEdge();
             }
             EOL = FALSE;
         }

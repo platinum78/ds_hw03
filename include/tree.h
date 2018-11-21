@@ -131,10 +131,5 @@ TreeNode* bstRightMost(TreeNode* node)
     return pNode;
 }
 
-// Merge two binary search trees
-void bstMerge(TreeNode* bst1, TreeNode* bst2)
-{
-
-}
 
 #endif
