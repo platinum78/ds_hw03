@@ -3,18 +3,12 @@
 
 int main(void)
 {
-    FILE* input = fopen("./input.txt", "r");
-    int nKeyBuf[2] = { 0, 0 };
-    char cCharBuf[10];
-    int nLineLen = 0;
-    int nBuf = 0;
-
-    while (fscanf(input, "%[^\n]", cCharBuf))
-    {
-        nBuf = atoi(cCharBuf);
-        printf("Read: %d \n", nBuf);
-        // fgetc(input);
-    }
+    int num = 10;
+    int* npNum = &num;
+    int nPointer = (int)npNum;
+    printf("%d \n", nPointer);
+    int* convert = (int*)nPointer;
+    printf("%d \n", *convert);
     
 
     return 0;

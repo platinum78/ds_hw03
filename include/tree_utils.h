@@ -7,7 +7,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "./tree.h"
+#include "./queue.h"
+#include "./stack.h"
 
+
+void bstTraverse(TreeNode* root, Queue* queue)
+{
+    if (root != NULL)
+    {
+        bstTraverse(root->leftChild, queue);
+        AddQ(queue, root);
+        bstTraverse(root->rightChild, queue);
+    }
+}
 
 int bstRead(FILE* file, TreeNode* bst1, TreeNode* bst2)
 {
@@ -68,10 +80,57 @@ int bstRead(FILE* file, TreeNode* bst1, TreeNode* bst2)
 // Merge two binary search trees
 void bstMerge(TreeNode* bst1, TreeNode* bst2)
 {
-    // First, just attach the second BST to somewhere pertinent
-    bstAttach(bst1, bst2);
+    // Get information of first and second BST
+    int bst1Size = bstGetSize(bst1);
+    int bst2Size = bstGetSize(bst2);
+    int bst1Range[2] = { bstLeftMost(bst1)->key, bstRightMost(bst1)->key };
+    int bst2Range[2] = { bstLeftMost(bst2)->key, bstRightMost(bst2)->key };
+
+    // Step 01: Find the place where the second BST is to be attached.
+    int bst2RootKey = bst2->key;
+    TreeNode* pNode; TreeNode* pNext = bst1;
+    while (pNext)
+    {
+        pNode = pNext;
+        if (pNext->key < bst2RootKey) pNext = pNext->leftChild;
+        else if (pNext->key == bst2RootKey) return;
+        else pNext = pNext->rightChild;
+    }
+    TreeNode* pAttachNode = pNode;
+
+    // Step 02: Create a stack that stores the address of the attachment node
+    Stack* iterStack = StackInit();
+    while (pNext)
+    {
+        pNode = pNext;
+        pNext = pNext->parent;
+        StackPush(iterStack, pNode);
+    }
+    StackFlip(iterStack);
+
+    // Step 03: Traverse the BST inorder, descending order, and find incompliant nodes.
+    // Create queue to store elements to be trimmed
+    Queue* dataQ = QInit();
+    Queue* trimQ = QInit();
+    bstTraverse(bst1, dataQ);
+
+    int nAttachNodeIdx = IndexQ(dataQ, pAttachNode);
+    int idx = 0;
+    QElem* pQElem = dataQ->head;
+
+    for (idx = 0; idx < dataQ->length; idx++)
+    {
+        if (idx < nAttachNodeIdx)
+            if (pQElem->data->key > pAttachNode->key)
+                AddQ(trimQ, pQElem);
+        else if (idx > nAttachNodeIdx)
+            if (pQElem->data->key < pAttachNode->key)
+                AddQ(trimQ, pQElem);
+        pQElem = pQElem->next;
+    }
+
+    // Attach the smaller BST to somewhere appropriate in the larger BST
     
 }
-
 
 #endif

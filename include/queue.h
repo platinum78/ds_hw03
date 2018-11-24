@@ -3,10 +3,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "./tree.h"
+
+typedef void* dtype;
 
 typedef struct QElem_
 {
-    int data;
+    dtype data;
     struct QElem_* next;
 } QElem;
 
@@ -18,9 +21,10 @@ typedef struct Queue
 } Queue;
 
 Queue* QInit();
-void AddQ(Queue*, int);
-int DeleteQ(Queue*);
+void AddQ(Queue*, dtype);
+dtype DeleteQ(Queue*);
 int PurgeQ(Queue*);
+int IndexQ(Queue* queue, dtype val);
 
 // Initialize Queue instance and return it.
 Queue* QInit()
@@ -34,7 +38,7 @@ Queue* QInit()
 }
 
 // Add element to the Queue
-void AddQ(Queue* queue, int val)
+void AddQ(Queue* queue, dtype val)
 {
     QElem* pElem = (QElem*)malloc(sizeof(QElem));
     pElem->next = NULL;
@@ -53,9 +57,9 @@ void AddQ(Queue* queue, int val)
 }
 
 // Remove element from the Queue
-int DeleteQ(Queue* queue, int val)
+dtype DeleteQ(Queue* queue)
 {
-    int data = queue->head->data;
+    dtype data = queue->head->data;
     QElem* pElem = queue->head;
     queue->head = pElem->next;
     free(pElem);
@@ -79,6 +83,19 @@ int PurgeQ(Queue* queue)
 
     free(queue);
     return delCnt;
+}
+
+int IndexQ(Queue* queue, dtype val)
+{
+    int idx = 0;
+    QElem* pQElem = queue->head;
+    while (idx < queue->length)
+    {
+        if (pQElem->data == val) return idx;
+        idx++;
+    }
+    
+    return -1;
 }
 
 

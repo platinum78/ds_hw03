@@ -19,11 +19,16 @@ typedef struct TreeNode_
 } TreeNode;
 
 void bstInit(TreeNode*, int, int);
-TreeNode* bstFindElemAddr(int key);
 int bstIndexOf(int data);
 int bstAttach(TreeNode* root, TreeNode* node);
 int bstInsert(TreeNode* root, int, int);
 int bstInsertEdge(TreeNode* node, int, int);
+int bstGetSize(TreeNode* root);
+int bstGetHeight(TreeNode* root);
+int bstNodeDelete(TreeNode* node);
+int bstDelete(int key);
+int bstNodeDegree(TreeNode* node);
+TreeNode* bstFindElemAddr(int key);
 TreeNode* bstLeftMost(TreeNode* node);
 TreeNode* bstRightMost(TreeNode* node);
 void bstMerge(TreeNode* bst1, TreeNode* bst2);
@@ -131,5 +136,82 @@ TreeNode* bstRightMost(TreeNode* node)
     return pNode;
 }
 
+// Get the size of BST; using recursive function
+int bstGetSize(TreeNode* root)
+{
+    if (bstNodeDegree(root) != 0) return 1;
+    return bstGetSize(root->leftChild) + bstGetSize(root->rightChild) + 1;
+}
+
+// Get the height of BST
+int bstGetHeight(TreeNode* root)
+{
+    if (bstNodeDegree(root) != 0) return 1;
+    if (bstGetHeight(root->leftChild));  // MODIFY THIS
+}
+
+// Get the degree of a node in a BST
+int bstNodeDegree(TreeNode* node)
+{
+    if (node->leftChild)
+    {
+        if (node->rightChild) return 2;
+        else return 1;
+    }
+    else return 0;
+}
+
+// Delete node from the BST, using the given NODE
+int bstNodeDelete(TreeNode* node)
+{
+    int nNodeDegree = bstNodeDegree(node);
+    TreeNode* pNode = NULL;
+    int delKey = 0;
+
+    if (nNodeDegree == 2)
+    {
+        // Use the rightmost of left subtree for the new key
+        pNode = bstRightMost(node->leftChild);
+        
+        if (bstNodeDegree(pNode) == 1) pNode->leftChild->parent = pNode;
+        pNode->parent->rightChild = pNode->leftChild;
+
+        // Replace node with pNode
+        pNode->leftChild = node->leftChild;
+        pNode->rightChild = node->rightChild;
+        pNode->parent = node->parent;
+        delKey = node->key;
+        free(node);
+    }
+    else if (nNodeDegree == 1)
+    {
+        if (node->leftChild)
+        {
+            if (node == node->parent->leftChild) node->parent->leftChild = node->leftChild;
+            else if (node == node->parent->rightChild) node->parent->rightChild = node->leftChild;
+        }
+        else if (node->rightChild)
+        {
+            if (node == node->parent->leftChild) node->parent->leftChild = node->rightChild;
+            else if (node == node->parent->rightChild) node->parent->rightChild = node->rightChild;
+        }
+        delKey = node->key;
+        free(node);
+    }
+    else if (nNodeDegree == 0)
+    {
+        if (node == node->parent->leftChild) node->parent->leftChild = NULL;
+        else if (node == node->parent->rightChild) node->parent->rightChild = NULL;
+        delKey = node->key;
+        free(node);
+    }
+}
+
+// Delete node from the BST
+int bstDelete(int key)
+{
+    TreeNode* pNode = bstFindElemAddr(key);
+    return bstNodeDelete(pNode);
+}
 
 #endif
