@@ -48,17 +48,20 @@ void AddQ(Queue* queue, dtype val)
     {
         queue->head = pElem;
         queue->tail = pElem;
+        (queue->length)++;
     }
     else
     {
         queue->tail->next = pElem;
         queue->tail = pElem;
+        (queue->length)++;
     }
 }
 
 // Remove element from the Queue
 dtype DeleteQ(Queue* queue)
 {
+    if (queue->head == NULL) return NULL;
     dtype data = queue->head->data;
     QElem* pElem = queue->head;
     queue->head = pElem->next;
@@ -92,6 +95,7 @@ int IndexQ(Queue* queue, dtype val)
     while (idx < queue->length)
     {
         if (pQElem->data == val) return idx;
+        pQElem = pQElem->next;
         idx++;
     }
     

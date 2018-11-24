@@ -18,7 +18,7 @@ typedef struct TreeNode_
     int data;
 } TreeNode;
 
-void bstInit(TreeNode*, int, int);
+void bstInit(TreeNode**, int, int);
 int bstIndexOf(int data);
 int bstAttach(TreeNode* root, TreeNode* node);
 int bstInsert(TreeNode* root, int, int);
@@ -26,20 +26,20 @@ int bstInsertEdge(TreeNode* node, int, int);
 int bstGetSize(TreeNode* root);
 int bstGetHeight(TreeNode* root);
 int bstNodeDelete(TreeNode* node);
-int bstDelete(int key);
+int bstDelete(TreeNode* root, int key);
 int bstNodeDegree(TreeNode* node);
-TreeNode* bstFindElemAddr(int key);
+TreeNode* bstFindElemAddr(TreeNode* root, int key);
 TreeNode* bstLeftMost(TreeNode* node);
 TreeNode* bstRightMost(TreeNode* node);
 void bstMerge(TreeNode* bst1, TreeNode* bst2);
 
-void bstInit(TreeNode* rootAddr, int rootKey, int data)
+void bstInit(TreeNode** rootAddr, int rootKey, int data)
 {
-    rootAddr = (TreeNode*)malloc(sizeof(TreeNode));
-    rootAddr->leftChild = NULL; rootAddr->rightChild = NULL;
-    rootAddr->leftCnt = 0;
-    rootAddr->key = rootKey;
-    rootAddr->data = data;
+    *rootAddr = (TreeNode*)malloc(sizeof(TreeNode));
+    (*rootAddr)->leftChild = NULL; (*rootAddr)->rightChild = NULL; (*rootAddr)->parent = NULL;
+    (*rootAddr)->leftCnt = 0;
+    (*rootAddr)->key = rootKey;
+    (*rootAddr)->data = data;
 }
 
 TreeNode* bstFindElemAddr(TreeNode* root, int key)
@@ -92,18 +92,45 @@ int bstInsert(TreeNode* root, int key, int data)
         else if (key == pNext->key) return -1;
         else if (key > pNext->key) pNext = pNext->rightChild;
     }
+    printf("Checkpoint! \n");
 
     // Insert data into desired position
-    if (key < pNode->key) pNode->leftChild = (TreeNode*)malloc(sizeof(TreeNode));
-    else if (key > pNode->key) pNode->rightChild = (TreeNode*)malloc(sizeof(TreeNode));
+    if (key < pNode->key)
+    {
+        pNode->leftChild = (TreeNode*)malloc(sizeof(TreeNode));
+        pNode->leftChild->leftChild = NULL;
+        pNode->leftChild->rightChild = NULL;
+        pNode->leftChild->key = key;
+        pNode->leftChild->data = data;
+        pNode->leftChild->parent = pNode;
+    }
+    else if (key > pNode->key)
+    {
+        pNode->rightChild = (TreeNode*)malloc(sizeof(TreeNode));
+        pNode->rightChild->leftChild = NULL;
+        pNode->rightChild->rightChild = NULL;
+        pNode->rightChild->key = key;
+        pNode->rightChild->data = data;
+        pNode->rightChild->parent = pNode;
+    }
 
     return 0;
 }
 
 int bstInsertEdge(TreeNode* node, int key, int data)
 {
-    if (key < node->key) bstInit(node->leftChild, key, data);
-    else if (key > node->key) bstInit(node->rightChild, key, data);
+    if (key < node->key)
+    {
+        printf("Insert %4d as the left  child of %4d \n", key, node->key);
+        bstInit(&(node->leftChild), key, data);
+        node->leftChild->parent = node;
+    }
+    else if (key > node->key)
+    {
+        printf("Insert %4d as the right child of %4d \n", key, node->key);
+        bstInit(&(node->rightChild), key, data);
+        node->rightChild->parent = node;
+    }
     else return -1;
     return 0;
 }
@@ -139,7 +166,8 @@ TreeNode* bstRightMost(TreeNode* node)
 // Get the size of BST; using recursive function
 int bstGetSize(TreeNode* root)
 {
-    if (bstNodeDegree(root) != 0) return 1;
+    if (root == NULL) return 0;
+    if (root->leftChild == NULL && root->rightChild == NULL) return 1;
     return bstGetSize(root->leftChild) + bstGetSize(root->rightChild) + 1;
 }
 
@@ -173,8 +201,15 @@ int bstNodeDelete(TreeNode* node)
         // Use the rightmost of left subtree for the new key
         pNode = bstRightMost(node->leftChild);
         
-        if (bstNodeDegree(pNode) == 1) pNode->leftChild->parent = pNode;
-        pNode->parent->rightChild = pNode->leftChild;
+        if (bstNodeDegree(pNode) == 1)
+        {
+            pNode->leftChild->parent = pNode->parent;
+            pNode->parent->rightChild = pNode->leftChild;
+        }
+        else
+        {
+            pNode->parent->rightChild = NULL;
+        }
 
         // Replace node with pNode
         pNode->leftChild = node->leftChild;
@@ -208,10 +243,20 @@ int bstNodeDelete(TreeNode* node)
 }
 
 // Delete node from the BST
-int bstDelete(int key)
+int bstDelete(TreeNode* root, int key)
 {
-    TreeNode* pNode = bstFindElemAddr(key);
+    TreeNode* pNode = bstFindElemAddr(root, key);
     return bstNodeDelete(pNode);
+}
+
+void bstPrint(TreeNode* root)
+{
+    if (root != NULL)
+    {
+        bstPrint(root->leftChild);
+        printf("Key: %4d, Data: %4d, pointer: %p, leftChild: %p, rightChild: %p, parent: %p \n", root->key, root->data, root, root->leftChild, root->rightChild, root->parent);
+        bstPrint(root->rightChild);
+    }
 }
 
 #endif

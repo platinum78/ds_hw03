@@ -8,7 +8,6 @@
 #include <stdlib.h>
 #include "./tree.h"
 #include "./queue.h"
-#include "./stack.h"
 
 
 void bstTraverse(TreeNode* root, Queue* queue)
@@ -17,61 +16,83 @@ void bstTraverse(TreeNode* root, Queue* queue)
     {
         bstTraverse(root->leftChild, queue);
         AddQ(queue, root);
+        printf("Added %d \n", root->key);
         bstTraverse(root->rightChild, queue);
     }
 }
 
-int bstRead(FILE* file, TreeNode* bst1, TreeNode* bst2)
+void bstWrite(FILE* output, TreeNode* root)
 {
-    char cStrBuf[100] = { '\n', };
-    char cCharBuf;
-    int nLineLen = 0; int nCursor = 0; int nKeyBuf[2] = { 0, 0 };
-    int EOL = FALSE;
-    TreeNode* pNode; TreeNode* tree = bst1;
-    fseek(file, 0, SEEK_SET);
-
-    while (fread(&cCharBuf, 1, 1, file))
+    if (root != NULL)
     {
-        // Switch cases through input character value
-        switch (cCharBuf)
-        {
-            case ' ':
-                if (nCursor)
-                {
-                    cStrBuf[nCursor] = '\n';
-                    nKeyBuf[nLineLen++] = atoi(cStrBuf);
-                    nCursor = 0;
-                    nLineLen++;
-                }
-                break;
-            case '\n':
-                if (nCursor)
-                {
-                    cStrBuf[nCursor] = '\0';
-                    nKeyBuf[nLineLen++] = atoi(cStrBuf);
-                    nCursor = 0;
-                    nLineLen++;
-                    EOL = TRUE;
-                }
-                break;
-            default:
-                cStrBuf[nCursor++] = cCharBuf;
-                break;
-        }
+        if (root->parent == NULL)
+            fprintf(output, "%d \n", root->key);
+        else
+            fprintf(output, "%d %d \n", root->parent->key, root->key);
+        bstWrite(output, root->leftChild);
+        bstWrite(output, root->rightChild);
+    }
+}
 
-        // Do parsing operation when reached EOL
-        if (EOL)
+void bstWriteLevelOrder(FILE* output, TreeNode* root)
+{
+    TreeNode* pNode = root;
+    Queue* traverseQ = QInit();
+    AddQ(traverseQ, pNode);
+    while (1)
+    {
+        pNode = (TreeNode*)DeleteQ(traverseQ);
+        if (pNode == NULL) break;
+
+        if (pNode->parent == NULL)
+            fprintf(output, "%d \n", pNode->key);
+        else
+            fprintf(output, "%d %d \n", pNode->parent->key, pNode->key);
+
+        if (pNode->leftChild) AddQ(traverseQ, pNode->leftChild);
+        if (pNode->rightChild) AddQ(traverseQ, pNode->rightChild);
+    }
+}
+
+int bstRead(FILE* input, TreeNode** bst1, TreeNode** bst2)
+{
+    char cStrBuf[100] = { '\0', };
+    char cCharBuf;
+    int nReadLen = 0;
+    int nLineLen = 0; int nCursor = 0; int nKeyBuf[2] = { 0, 0 };
+    int treeCnt = 0;
+    int EOL = FALSE;
+    TreeNode* pNode; TreeNode* tree = *bst1;
+    fseek(input, 0, SEEK_END);
+    int nFileLen = ftell(input);
+    fseek(input, 0, SEEK_SET);
+    
+    while (ftell(input) < nFileLen)
+    {
+        nCursor = 0;
+        while (1)
         {
-            if (nLineLen == 1)  // Only one argument given: this is the root node
-            {
+            nReadLen = fread(&cCharBuf, 1, 1, input);
+            if (cCharBuf == '\n' || nReadLen == 0) break;
+            cStrBuf[nCursor++] = cCharBuf;
+        }
+        cStrBuf[nCursor] = '\0';
+        nLineLen = sscanf(cStrBuf, "%d %d", nKeyBuf, nKeyBuf + 1);
+        if (nLineLen == 1)
+        {
+            printf("New tree with root key %d \n", nKeyBuf[0]);
+            treeCnt++;
+            printf("TreeCnt: %d \n", treeCnt);
+            if (treeCnt == 1)
                 bstInit(bst1, nKeyBuf[0], 0);
-            }
-            else  // Two arguments are given: this is a parent-leaf tuple
-            {
-                pNode = bstFindElemAddr(nKeyBuf[0]);
-                // bstInsertEdge();
-            }
-            EOL = FALSE;
+            else if (treeCnt == 2)
+                bstInit(bst2, nKeyBuf[0], 0);
+        }
+        else
+        {
+            if (treeCnt == 1) pNode = bstFindElemAddr(*bst1, nKeyBuf[0]);
+            else if (treeCnt == 2) pNode = bstFindElemAddr(*bst2, nKeyBuf[0]);
+            bstInsertEdge(pNode, nKeyBuf[1], 0);
         }
     }
 }
@@ -83,54 +104,47 @@ void bstMerge(TreeNode* bst1, TreeNode* bst2)
     // Get information of first and second BST
     int bst1Size = bstGetSize(bst1);
     int bst2Size = bstGetSize(bst2);
-    int bst1Range[2] = { bstLeftMost(bst1)->key, bstRightMost(bst1)->key };
-    int bst2Range[2] = { bstLeftMost(bst2)->key, bstRightMost(bst2)->key };
-
-    // Step 01: Find the place where the second BST is to be attached.
-    int bst2RootKey = bst2->key;
-    TreeNode* pNode; TreeNode* pNext = bst1;
-    while (pNext)
-    {
-        pNode = pNext;
-        if (pNext->key < bst2RootKey) pNext = pNext->leftChild;
-        else if (pNext->key == bst2RootKey) return;
-        else pNext = pNext->rightChild;
-    }
-    TreeNode* pAttachNode = pNode;
-
-    // Step 02: Create a stack that stores the address of the attachment node
-    Stack* iterStack = StackInit();
-    while (pNext)
-    {
-        pNode = pNext;
-        pNext = pNext->parent;
-        StackPush(iterStack, pNode);
-    }
-    StackFlip(iterStack);
-
-    // Step 03: Traverse the BST inorder, descending order, and find incompliant nodes.
-    // Create queue to store elements to be trimmed
-    Queue* dataQ = QInit();
-    Queue* trimQ = QInit();
-    bstTraverse(bst1, dataQ);
-
-    int nAttachNodeIdx = IndexQ(dataQ, pAttachNode);
-    int idx = 0;
-    QElem* pQElem = dataQ->head;
-
-    for (idx = 0; idx < dataQ->length; idx++)
-    {
-        if (idx < nAttachNodeIdx)
-            if (pQElem->data->key > pAttachNode->key)
-                AddQ(trimQ, pQElem);
-        else if (idx > nAttachNodeIdx)
-            if (pQElem->data->key < pAttachNode->key)
-                AddQ(trimQ, pQElem);
-        pQElem = pQElem->next;
-    }
-
-    // Attach the smaller BST to somewhere appropriate in the larger BST
+    printf("%d, %d \n", bst1Size, bst2Size);
     
+    TreeNode* pOriginal;
+    TreeNode* pAugmentation;
+    if (bst1Size > bst2Size)
+    {
+        pOriginal = bst1;
+        pAugmentation = bst2;
+    }
+    else
+    {
+        pOriginal = bst2;
+        pAugmentation = bst1;
+    }
+
+    // Iterate the smaller BST and add each value to the larger BST
+    Queue* iterQ = QInit();
+    printf("Checkpoint! \n");
+    bstTraverse(pAugmentation, iterQ);
+    TreeNode* pNode;
+    int opCnt = 0;
+    
+    bstPrint(pOriginal);
+    bstPrint(pAugmentation);
+
+    while (1)
+    {
+        pNode = (TreeNode*)DeleteQ(iterQ);
+        if (pNode == NULL) break;
+        printf("%d %d \n", pNode->key, pNode->data);
+        bstInsert(pOriginal, pNode->key, pNode->data);
+        opCnt++;
+    }
+}
+
+void outputWrite(FILE* output, TreeNode* bstNew)
+{
+    bstWriteLevelOrder(output, bstNew);
+    printf("Checkpoint! \n");
+    fprintf(output, "%d\n%d\n", bstGetSize(bstNew), bstGetSize(bstNew));
+    printf("Checkpoint! \n");
 }
 
 #endif
