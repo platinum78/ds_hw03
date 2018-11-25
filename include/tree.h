@@ -31,7 +31,6 @@ int bstNodeDegree(TreeNode* node);
 TreeNode* bstFindElemAddr(TreeNode* root, int key);
 TreeNode* bstLeftMost(TreeNode* node);
 TreeNode* bstRightMost(TreeNode* node);
-void bstMerge(TreeNode* bst1, TreeNode* bst2);
 
 void bstInit(TreeNode** rootAddr, int rootKey, int data)
 {
@@ -40,6 +39,17 @@ void bstInit(TreeNode** rootAddr, int rootKey, int data)
     (*rootAddr)->leftCnt = 0;
     (*rootAddr)->key = rootKey;
     (*rootAddr)->data = data;
+}
+
+TreeNode* bstNodeInit(TreeNode* parent, TreeNode* leftChild, TreeNode* rightChild, int key, int data)
+{
+    TreeNode* pNode = (TreeNode*)malloc(sizeof(TreeNode));
+    pNode->parent = parent;
+    pNode->leftChild = leftChild;
+    pNode->rightChild = rightChild;
+    pNode->key = key;
+    pNode->data = data;
+    return pNode;
 }
 
 TreeNode* bstFindElemAddr(TreeNode* root, int key)
@@ -253,6 +263,18 @@ void bstPrint(TreeNode* root)
         printf("Key: %4d, Data: %4d, pointer: %p, leftChild: %p, rightChild: %p, parent: %p \n", root->key, root->data, root, root->leftChild, root->rightChild, root->parent);
         bstPrint(root->rightChild);
     }
+}
+
+TreeNode* bstFindRoot(TreeNode* root)
+{
+    TreeNode* pNode; TreeNode* pNext = root;
+
+    while (pNext)
+    {
+        pNode = pNext;
+        pNext = pNext->parent;
+    }
+    return pNode;
 }
 
 #endif

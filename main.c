@@ -12,11 +12,11 @@ int main(void)
     TreeNode* bst2;
 
     bstRead(input, &bst1, &bst2);
-    bstMerge(bst1, bst2);
+    TreeNode* bstMerged = bstMerge(bst1, bst2);
 
     printf("====== Merged BST ====== \n");
-    bstPrint(bst1);
-    outputWrite(output, bst1);
+    bstPrint(bstMerged);
+    outputWrite(output, bstMerged);
     
     return 0;
 }
