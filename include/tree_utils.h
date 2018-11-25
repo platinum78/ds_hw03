@@ -90,9 +90,29 @@ int bstRead(FILE* input, TreeNode** bst1, TreeNode** bst2)
         }
         else
         {
-            if (treeCnt == 1) pNode = bstFindElemAddr(*bst1, nKeyBuf[0]);
-            else if (treeCnt == 2) pNode = bstFindElemAddr(*bst2, nKeyBuf[0]);
-            bstInsertEdge(pNode, nKeyBuf[1], 0);
+            if (treeCnt == 1)
+            {
+                pNode = bstFindElemAddr(*bst1, nKeyBuf[0]);
+                if (pNode) bstInsertEdge(pNode, nKeyBuf[1], 0);
+                else printf("Node not found! \n");
+                // else
+                // {
+                //     bstInsert(*bst1, nKeyBuf[0], 0);
+                //     bstInsert(*bst1, nKeyBuf[1], 0);
+                // }
+            }
+            else if (treeCnt == 2)
+            {
+                pNode = bstFindElemAddr(*bst2, nKeyBuf[0]);
+                if (pNode) bstInsertEdge(pNode, nKeyBuf[1], 0);
+                else printf("Node not found! \n");
+                // else
+                // {
+                //     bstInsert(*bst2, nKeyBuf[0], 0);
+                //     bstInsert(*bst2, nKeyBuf[1], 0);
+                // }
+            }
+            
         }
     }
 }
@@ -104,7 +124,7 @@ void bstMerge(TreeNode* bst1, TreeNode* bst2)
     // Get information of first and second BST
     int bst1Size = bstGetSize(bst1);
     int bst2Size = bstGetSize(bst2);
-    printf("%d, %d \n", bst1Size, bst2Size);
+    printf("BST 1 size: %d, BST 2 size: %d \n", bst1Size, bst2Size);
     
     TreeNode* pOriginal;
     TreeNode* pAugmentation;
@@ -121,19 +141,22 @@ void bstMerge(TreeNode* bst1, TreeNode* bst2)
 
     // Iterate the smaller BST and add each value to the larger BST
     Queue* iterQ = QInit();
-    printf("Checkpoint! \n");
+    printf("Adding all elements in augmentation tree to a queue... \n");
     bstTraverse(pAugmentation, iterQ);
     TreeNode* pNode;
     int opCnt = 0;
     
+    printf("====== Original BST ====== \n");
     bstPrint(pOriginal);
+    printf("====== Augmented BST ====== \n");
     bstPrint(pAugmentation);
 
+    printf("Adding elements of augmented BST to original BST... \n");
     while (1)
     {
         pNode = (TreeNode*)DeleteQ(iterQ);
         if (pNode == NULL) break;
-        printf("%d %d \n", pNode->key, pNode->data);
+        // printf("%d %d \n", pNode->key, pNode->data);
         bstInsert(pOriginal, pNode->key, pNode->data);
         opCnt++;
     }
@@ -142,9 +165,7 @@ void bstMerge(TreeNode* bst1, TreeNode* bst2)
 void outputWrite(FILE* output, TreeNode* bstNew)
 {
     bstWriteLevelOrder(output, bstNew);
-    printf("Checkpoint! \n");
     fprintf(output, "%d\n%d\n", bstGetSize(bstNew), bstGetSize(bstNew));
-    printf("Checkpoint! \n");
 }
 
 #endif

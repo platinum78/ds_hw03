@@ -14,6 +14,7 @@ int main(void)
     bstRead(input, &bst1, &bst2);
     bstMerge(bst1, bst2);
 
+    printf("====== Merged BST ====== \n");
     bstPrint(bst1);
     outputWrite(output, bst1);
     

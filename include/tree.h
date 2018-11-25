@@ -44,15 +44,10 @@ void bstInit(TreeNode** rootAddr, int rootKey, int data)
 
 TreeNode* bstFindElemAddr(TreeNode* root, int key)
 {
-    // Return NULL, if seeked for a nonexisting leaf
-    if (root == NULL) return NULL;
-
-    if (key < root->key)
-        bstFindElemAddr(root->leftChild, key);
-    else if (key == root->key)
-        return root;
-    else if (key > root->key)
-        bstFindElemAddr(root->rightChild, key);
+    if (root == NULL || key == root->key) return root;
+    
+    if (key < root->key) return bstFindElemAddr(root->leftChild, key);
+    else if (key > root->key) return bstFindElemAddr(root->rightChild, key);
 }
 
 int bstAttach(TreeNode* root, TreeNode* node)
@@ -92,7 +87,6 @@ int bstInsert(TreeNode* root, int key, int data)
         else if (key == pNext->key) return -1;
         else if (key > pNext->key) pNext = pNext->rightChild;
     }
-    printf("Checkpoint! \n");
 
     // Insert data into desired position
     if (key < pNode->key)
@@ -103,6 +97,7 @@ int bstInsert(TreeNode* root, int key, int data)
         pNode->leftChild->key = key;
         pNode->leftChild->data = data;
         pNode->leftChild->parent = pNode;
+        printf("Insert %4d as the left  child of %4d \n", key, pNode->key);
     }
     else if (key > pNode->key)
     {
@@ -112,6 +107,7 @@ int bstInsert(TreeNode* root, int key, int data)
         pNode->rightChild->key = key;
         pNode->rightChild->data = data;
         pNode->rightChild->parent = pNode;
+        printf("Insert %4d as the right child of %4d \n", key, pNode->key);
     }
 
     return 0;
